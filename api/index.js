@@ -7,8 +7,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import { connectDb } from '../config/db.js';
-import proRouter from './routes/routePro.js';
-import { deployProjects } from './deploy.js';
+import proRouter from '../routes/routePro.js';
+import { deployProjects } from '../deploy.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 */
 const uploadsDir = process.env.VERCEL
   ? path.join(os.tmpdir(), 'portfolio-uploads')
-  : path.join(__dirname, 'uploads');
+  : path.join(__dirname, '..', 'uploads');
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -33,8 +33,18 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static(uploadsDir));
 
-/* connect database */
-await connectDb();
+const ensureDb = async (req, res, next) => {
+  try {
+    await connectDb();
+    return next();
+  } catch (err) {
+    console.error('DB connection failed:', err?.message || err);
+    return res.status(500).json({
+      success: false,
+      message: 'Database connection failed. Check MONGO_URI on Vercel.'
+    });
+  }
+};
 
 /* routes */
 app.get('/', (req, res) => {
@@ -45,9 +55,17 @@ app.get('/api/test', (req, res) => {
   res.json({ success: true, message: 'Backend is working!' });
 });
 
-app.use('/api/projects', proRouter);
+app.use('/api/projects', ensureDb, proRouter);
 
 app.post('/api/deploy', async (req, res) => {
+  // This endpoint runs local build/deploy commands (surge) and is NOT supported on Vercel serverless.
+  if (process.env.VERCEL) {
+    return res.status(400).json({
+      success: false,
+      message: 'Deploy endpoint is disabled on Vercel.'
+    });
+  }
+
   try {
     const { projects } = req.body;
 
@@ -58,6 +76,7 @@ app.post('/api/deploy', async (req, res) => {
       });
     }
 
+    await connectDb();
     const result = await deployProjects({ projects });
     res.json(result);
   } catch (err) {
