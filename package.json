@@ -1,0 +1,23 @@
+{
+  "name": "portfolio-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "express-validator": "^7.3.1",
+    "fs-extra": "^11.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemon": "^3.1.11",
+    "stripe": "^20.0.0"
+  }
+}
