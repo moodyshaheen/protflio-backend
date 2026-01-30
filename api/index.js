@@ -6,7 +6,7 @@ import os from 'os';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-import { connectDb } from './config/db.js';
+import { connectDb } from '../config/db.js';
 import proRouter from './routes/routePro.js';
 import { deployProjects } from './deploy.js';
 
